@@ -4,7 +4,6 @@ use super::{bird::Player, Pipe, PlayState, Scroll, GAP_HEIGHT, PIPE_SPAWN_OFFSET
 use super::{PipeSpawnTimer, Score, PIPE_DESPAWN_OFFSET};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
-use bevy::window::PrimaryWindow;
 use rand::Rng;
 
 pub(super) fn spawn_pipe(

@@ -1,11 +1,7 @@
-use std::process::Command;
-
-use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
-
 use crate::{
     game_over::DespawnOnReset, GameState, Ground, Scroll, BIRD_SIZE, BIRD_Z, GROUND_WIDTH,
 };
+use bevy::prelude::*;
 
 use self::bird::Player;
 
@@ -18,7 +14,7 @@ const DEATH_HEIGHT: f32 = -125.0;
 const PIPE_SPAWN_OFFSET: f32 = 180.0;
 const PIPE_SPAWN_TIME: f32 = 4.0;
 const PIPE_DESPAWN_OFFSET: f32 = 360.0;
-const GAP_HEIGHT: f32 = 100.0;
+const GAP_HEGHT: f32 = 100.0;
 const BIRD_ANIMATION_SPEED: f32 = 10.0;
 
 pub mod bird;

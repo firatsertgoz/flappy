@@ -11,3 +11,5 @@ rand = "0.8.4"
 
 [profile.release]
 opt-level = 'z'
+lto = true
+codegen-units = 1
