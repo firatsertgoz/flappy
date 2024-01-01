@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
-use super::{BIRD_ANIMATION_SPEED, FALL_SPEED, FALL_VELOCITY_LIMIT, JUMP_AMOUNT};
+use super::{BIRD_ANIMATION_SPEED, FALL_SPEED, FALL_VELOCITY_LIMIT, JUMP_AMOUNT, MOVE_SPEED};
 pub const PLAYER_SIZE: f32 = 64.0;
 pub const PLAYER_SPEED: f32 = 500.0;
 
@@ -10,11 +10,7 @@ pub struct Player {
     velocity: f32,
 }
 
-pub fn jump(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut player: Query<&mut Player, With<Player>>,
-    time: Res<Time>,
-) {
+pub fn jump(keyboard_input: Res<Input<KeyCode>>, mut player: Query<&mut Player, With<Player>>) {
     for mut player in &mut player {
         if keyboard_input.just_pressed(KeyCode::Space) {
             player.velocity = JUMP_AMOUNT;
@@ -31,7 +27,7 @@ pub fn fall(mut player: Query<&mut Player, With<Player>>, time: Res<Time>) {
 
 pub fn move_player(mut player: Query<(&mut Transform, &Player), With<Player>>, time: Res<Time>) {
     for (mut transform, player) in &mut player {
-        transform.translation.y += player.velocity * time.delta_seconds();
+        transform.translation.y += player.velocity * MOVE_SPEED * time.delta_seconds();
     }
 }
 

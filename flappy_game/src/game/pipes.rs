@@ -1,21 +1,25 @@
-use super::PipeSpawnTimer;
+use crate::{BIRD_SIZE, PIPE_SIZE};
+
 use super::{bird::Player, Pipe, PlayState, Scroll, GAP_HEIGHT, PIPE_SPAWN_OFFSET, SCROLL_SPEED};
+use super::{PipeSpawnTimer, Score, PIPE_DESPAWN_OFFSET};
 use bevy::prelude::*;
+use bevy::sprite::collide_aabb::collide;
 use bevy::window::PrimaryWindow;
+use rand::Rng;
 
 pub(super) fn spawn_pipe(
     mut commands: Commands,
     mut timer: ResMut<PipeSpawnTimer>,
     asset_server: Res<AssetServer>,
     time: Res<Time>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
     timer.0.tick(time.delta());
 
     if !timer.0.finished() {
         return;
     }
-
+    let mut rng = rand::thread_rng();
+    let y = rng.gen_range(-50.0..50.0);
     let sprite = asset_server.load("sprites/pipe.png");
 
     commands.spawn((
@@ -23,7 +27,7 @@ pub(super) fn spawn_pipe(
         Scroll,
         SpriteBundle {
             texture: sprite,
-            transform: Transform::from_xyz(PIPE_SPAWN_OFFSET, 0.0, 0.0),
+            transform: Transform::from_xyz(PIPE_SPAWN_OFFSET, y - 160.0, 0.0),
             ..Default::default()
         },
     ));
@@ -31,7 +35,7 @@ pub(super) fn spawn_pipe(
 
 pub(super) fn despawn_pipe(mut commands: Commands, query: Query<(Entity, &Transform), With<Pipe>>) {
     for (entity, transform) in &query {
-        if transform.translation.x < -PIPE_SPAWN_OFFSET {
+        if transform.translation.x < -PIPE_DESPAWN_OFFSET {
             commands.entity(entity).despawn();
         }
     }
@@ -46,37 +50,28 @@ pub(super) fn move_pipes(mut pipe_query: Query<&mut Transform, With<Pipe>>, time
 pub(super) fn check_if_passed_pipes(
     mut commands: Commands,
     mut score: ResMut<Score>,
-    mut pipe_query: Query<&mut Transform, With<Pipe>>,
-    player_query: Query<&Transform, With<Player>>,
+    pipes: Query<(Entity, &Transform), With<Pipe>>,
+    bird: Query<&Transform, With<Player>>,
 ) {
-    for mut transform in &mut pipe_query {
-        for player_transform in player_query.iter() {
-            if transform.translation.x < player_transform.translation.x {
-                score.0 += 1;
-            }
+    let bird = bird.single();
+    for (entity, pipe) in &pipes {
+        if pipe.translation.x + PIPE_SIZE.x / 2.0 < bird.translation.x - BIRD_SIZE.x / 2.0 {
+            commands.entity(entity).despawn();
+            score.0 += 1;
+            break;
         }
     }
 }
 
-pub(super) fn check_collision(
-    mut commands: Commands,
-    mut state: ResMut<NextState<PlayState>>,
-    mut pipe_query: Query<&mut Transform, With<Pipe>>,
-    player_query: Query<&Transform, With<Player>>,
+pub(super) fn check_pipe_collision(
+    mut play_state: ResMut<NextState<PlayState>>,
+    bird: Query<&Transform, With<Player>>,
+    pipes: Query<&Transform, With<Pipe>>,
 ) {
-    for mut transform in &mut pipe_query {
-        for player_transform in player_query.iter() {
-            if transform.translation.x < player_transform.translation.x {
-                let player_x = player_transform.translation.x;
-                let player_y = player_transform.translation.y;
-                let pipe_x = transform.translation.x;
-                let pipe_y = transform.translation.y;
-
-                if (player_x - pipe_x).abs() < 32.0 && (player_y - pipe_y).abs() > GAP_HEIGHT / 2.0
-                {
-                    state.set(PlayState::Fail);
-                }
-            }
+    let bird = bird.single();
+    for pipe in &pipes {
+        if collide(bird.translation, BIRD_SIZE, pipe.translation, PIPE_SIZE).is_some() {
+            play_state.set(PlayState::Fail);
         }
     }
 }
