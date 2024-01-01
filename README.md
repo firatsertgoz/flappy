@@ -1,1 +1,3 @@
-# Flappy bird implementation on WASM with Brevy
+# Flappy bird
+
+ Implementation on WASM with Brevy. Intended for learning purposes. 
