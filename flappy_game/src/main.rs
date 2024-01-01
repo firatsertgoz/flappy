@@ -1,16 +1,30 @@
-pub mod bird;
-pub mod pipes;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
+pub mod game;
+
+const PIPE_Z: f32 = 1.0;
+const GROUND_Z: f32 = 2.0;
+const BIRD_Z: f32 = 3.0;
+const UI_Z: f32 = 4.0;
+
+const BIRD_SIZE: Vec2 = Vec2::new(34.0, 24.0);
+const PIPE_SIZE: Vec2 = Vec2::new(52.0, 320.0);
+const GROUND_WIDTH: f32 = 336.0;
+const GROUND_HEIGHT: f32 = 112.0;
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
+enum GameState {
+    #[default]
+    Playing,
+    GameOver,
+}
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_systems(Startup, bird::spawn_player)
+        .add_systems(Startup, game::bird::spawn_player)
         .add_systems(Startup, spawn_camera)
-        .add_systems(Update, bird::player_movement)
-        .add_systems(Update, bird::confine_player_movement)
-        .add_systems(Startup, pipes::spawn_pipes)
+        .add_systems(Update, game::bird::confine_player_movement)
+        .add_systems(Startup, game::pipes::spawn_pipes)
         .run();
 }
 
@@ -21,3 +35,8 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
         ..default()
     });
 }
+
+#[derive(Component)]
+struct Ground;
+#[derive(Component)]
+struct Scroll;

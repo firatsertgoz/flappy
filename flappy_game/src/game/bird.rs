@@ -1,40 +1,46 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
+use super::{BIRD_ANIMATION_SPEED, FALL_SPEED, FALL_VELOCITY_LIMIT, JUMP_AMOUNT};
 pub const PLAYER_SIZE: f32 = 64.0;
 pub const PLAYER_SPEED: f32 = 500.0;
 
-#[derive(Component)]
-pub struct Player {}
-
-pub fn spawn_player(
-    mut commands: Commands,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    asset_server: Res<AssetServer>,
-) {
-    let window = window_query.get_single().unwrap();
-    commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
-            texture: asset_server.load("sprites/bird.png"),
-            ..default()
-        },
-        Player {},
-    ));
+#[derive(Component, Default)]
+pub struct Player {
+    velocity: f32,
 }
 
-pub fn player_movement(
+pub fn jump(
     keyboard_input: Res<Input<KeyCode>>,
-    mut player_query: Query<&mut Transform, With<Player>>,
+    mut player: Query<&mut Player, With<Player>>,
     time: Res<Time>,
 ) {
-    if let Ok(mut transform) = player_query.get_single_mut() {
-        let mut direction = Vec3::ZERO;
-
-        if keyboard_input.pressed(KeyCode::Space) {
-            direction += Vec3::new(0.0, 10.0, 0.0);
+    for mut player in &mut player {
+        if keyboard_input.just_pressed(KeyCode::Space) {
+            player.velocity = JUMP_AMOUNT;
         }
-        transform.translation += direction * PLAYER_SPEED * time.delta_seconds();
+    }
+}
+
+pub fn fall(mut player: Query<&mut Player, With<Player>>, time: Res<Time>) {
+    for mut player in &mut player {
+        player.velocity -= FALL_SPEED * time.delta_seconds();
+        player.velocity = player.velocity.max(FALL_VELOCITY_LIMIT);
+    }
+}
+
+pub fn move_player(mut player: Query<(&mut Transform, &Player), With<Player>>, time: Res<Time>) {
+    for (mut transform, player) in &mut player {
+        transform.translation.y += player.velocity * time.delta_seconds();
+    }
+}
+
+pub(super) fn animate_bird(
+    mut player: Query<&mut TextureAtlasSprite, With<Player>>,
+    time: Res<Time>,
+) {
+    for mut player in &mut player {
+        player.index = (time.elapsed_seconds() * BIRD_ANIMATION_SPEED) as usize % 4;
     }
 }
 
